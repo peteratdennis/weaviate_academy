@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 
-	DemoJeopardyQuestionAggregateWithNearTextWhereMultiple(client)
+	//DemoJeopardyQuestionAggregateWithNearTextWhereMultiple(client)
 	//DemoJeopardyQuestionAggregateWithNearTextWhere(client)
 	//DemoJeopardyQuestionAggregateWithNearTextGrouped(client)
 	//DemoJeopardyQuestionAggregate(client)
@@ -39,7 +39,7 @@ func main() {
 	//DemoLondonOlympics(client)
 	//DemoMajorCities(client)
 	//GetMeta(client)
-	//GetSchema(client)
+	GetSchema(client)
 }
 
 func DemoJeopardyQuestionAggregateWithNearTextWhereMultiple(client *weaviate.Client) {
@@ -488,7 +488,12 @@ func GetSchema(client *weaviate.Client) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%v", schema)
+
+	b, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))
 }
 
 func GetMeta(client *weaviate.Client) {
