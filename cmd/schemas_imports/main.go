@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/weaviate/weaviate-go-client/v4/weaviate"
+	"github.com/weaviate/weaviate-go-client/v4/weaviate/graphql"
 	"github.com/weaviate/weaviate/entities/models"
 	"log"
 	"os"
@@ -36,16 +37,114 @@ func main() {
 		panic(err)
 	}
 
-	JeopardyQuestionsImport(client)
+	JeopardyQuestionHybrid(client)
+	//JeopardyQuestionBM25(client)
+	//JeopardyQuestionsImport(client)
 	//JeopardyQuestionSchemaCreate(client)
 	//BatchImport(client)
-	//DeleteClass(client, "TestClass")
+	//DeleteClass(client, "JeopardyQuestion")
 	//DeleteClassArticle(client)
 	//CreateClassArticle(client)
 	//GetSchema(client)
 	//GetMeta(client)
 	//DummyDelete(client)
 	//DummyCreate(client)
+}
+
+func JeopardyQuestionHybrid(client *weaviate.Client) {
+	/*
+		{
+			Get {
+				JeopardyQuestion (
+					limit: 3
+					hybrid:{query:"lake", properties:["question", "answer"]}
+				){
+					question
+					answer
+					_additional {
+						score
+						explainScore
+					}
+				}
+			}
+		}
+
+	*/
+	hybridBuilder := client.GraphQL().HybridArgumentBuilder().
+		WithQuery("lake").
+		WithProperties([]string{"question", "answer"})
+
+	res, err := client.GraphQL().Get().
+		WithClassName("JeopardyQuestion").
+		WithFields([]graphql.Field{
+			{Name: "question"},
+			{Name: "answer"},
+			{Name: "_additional", Fields: []graphql.Field{
+				{Name: "score"},
+				{Name: "explainScore"},
+			}},
+		}...).
+		WithHybrid(hybridBuilder).
+		WithLimit(3).
+		Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	b, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))
+}
+
+func JeopardyQuestionBM25(client *weaviate.Client) {
+	/*
+		{
+			Get {
+				JeopardyQuestion (
+					limit: 3
+					bm25:{query:"lake", properties:["question^2", "answer"]}
+				){
+					value
+					question
+					answer
+					round
+					_additional {
+						id
+						score
+					}
+				}
+			}
+		}
+
+	*/
+	bm25Builder := client.GraphQL().Bm25ArgBuilder().
+		WithQuery("lake").
+		WithProperties([]string{"question^2", "answer"}...)
+
+	res, err := client.GraphQL().Get().
+		WithClassName("JeopardyQuestion").
+		WithFields([]graphql.Field{
+			{Name: "question"},
+			{Name: "answer"},
+			{Name: "value"},
+			{Name: "round"},
+			{Name: "_additional", Fields: []graphql.Field{
+				{Name: "score"},
+				{Name: "id"},
+			}},
+		}...).
+		WithBM25(bm25Builder).
+		WithLimit(3).
+		Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	b, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))
 }
 
 func generateWeaviateId(input string) strfmt.UUID {
@@ -109,8 +208,9 @@ func JeopardyQuestionSchemaCreate(client *weaviate.Client) {
 		Class: className,
 		Properties: []*models.Property{
 			{
-				Name:     "round",
-				DataType: []string{"text"},
+				Name:         "round",
+				DataType:     []string{"text"},
+				Tokenization: "field", // Jeopardy! not Jeopardy
 				ModuleConfig: map[string]any{
 					"text2vec-contextionary": map[string]any{
 						"skip": true,
