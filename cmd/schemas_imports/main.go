@@ -1,5 +1,7 @@
 package main
 
+// https://weaviate.io/developers/academy/zero_to_mvp/schema_and_imports
+
 import (
 	"context"
 	"crypto/md5"
@@ -24,6 +26,7 @@ type JeopardyQuestion struct {
 func main() {
 	headers := make(map[string]string)
 	headers["X-OpenAI-Api-Key"] = os.Getenv("OPENAI_APIKEY")
+	headers["X-OpenAI-Organization"] = os.Getenv("OPENAI_ORG")
 
 	cfg := weaviate.Config{
 		Host:   os.Getenv("WEAVIATE_HOST"),
@@ -42,7 +45,7 @@ func main() {
 	//JeopardyQuestionsImport(client)
 	//JeopardyQuestionSchemaCreate(client)
 	//BatchImport(client)
-	//DeleteClass(client, "JeopardyQuestion")
+	//DeleteClass(client, "Paragraph")
 	//DeleteClassArticle(client)
 	//CreateClassArticle(client)
 	//GetSchema(client)

@@ -1,5 +1,7 @@
 package main
 
+// https://weaviate.io/developers/academy/zero_to_mvp/setup
+
 import (
 	"context"
 	"encoding/json"
@@ -15,6 +17,7 @@ import (
 func main() {
 	headers := make(map[string]string)
 	headers["X-OpenAI-Api-Key"] = os.Getenv("OPENAI_APIKEY")
+	headers["X-OpenAI-Organization"] = os.Getenv("OPENAI_ORG")
 
 	cfg := weaviate.Config{
 		Host:       "edu-demo.weaviate.network",
